@@ -240,7 +240,7 @@ public class SubwaySystem {
         return distance;
     }
     
-    private Set<String> getCommonLines(String stationA, String stationB) {
+    protected Set<String> getCommonLines(String stationA, String stationB) {
         Station a = stations.get(stationA);
         Station b = stations.get(stationB);
         Set<String> common = new HashSet<>(a.getLines());
@@ -248,7 +248,7 @@ public class SubwaySystem {
         return common;
     }
     
-    private String getCommonLine(String stationA, String stationB) {
+    protected String getCommonLine(String stationA, String stationB) {
         return getCommonLines(stationA, stationB).iterator().next();
     }
     
