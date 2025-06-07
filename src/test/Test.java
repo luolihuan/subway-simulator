@@ -1,36 +1,78 @@
 package test;
-
-import model.MetroMap;
 import service.*;
-import utils.DataLoader;
-
-import java.util.List;
+import model.*;
+import util.Triple;
+import java.util.*;
 
 public class Test {
     public static void main(String[] args) {
-        MetroMap map = new MetroMap();
-
-        // 从 data/subway.txt 读取数据
-        DataLoader.loadSubwayData("data/subway.txt", map);
-
-        // 查询最短路径
-        List<String> path = PathFinder.findShortestPath(map.getGraph(), "径河", "汉西一路");
-        System.out.println("最短路径：");
-        for (String station : path) {
-            System.out.print(station + " → ");
+        SubwaySystem system = new SubwaySystem();
+        
+        try {
+            // 1. 加载地铁数据
+            System.out.println("正在加载地铁数据...");
+            system.loadFromFile("data/subway.txt");
+            System.out.println("数据加载完成！");
+            
+            // 2. 测试任务1：获取所有中转站
+            System.out.println("\n===== 任务1: 中转站识别 =====");
+            Map<String, Set<String>> transferStations = system.getTransferStations();
+            if (transferStations.isEmpty()) {
+                System.out.println("未找到中转站，请检查数据文件格式");
+            } else {
+                System.out.println("找到 " + transferStations.size() + " 个中转站:");
+                transferStations.forEach((station, lines) -> 
+                    System.out.println(" - " + station + "站: " + lines));
+            }
+            
+            // 3. 测试任务2：附近站点查询
+            System.out.println("\n===== 任务2: 附近站点查询 =====");
+            String testStation = "古田四路";
+            double maxDistance = 2.0;
+            System.out.println("查询站点: " + testStation + ", 最大距离: " + maxDistance + "公里");
+            
+            List<Triple<String, String, Double>> nearby = system.getStationsWithinDistance(testStation, maxDistance);
+            if (nearby.isEmpty()) {
+                System.out.println("未找到附近站点");
+            } else {
+                System.out.println("找到 " + nearby.size() + " 个附近站点:");
+                nearby.forEach(System.out::println);
+            }
+            
+            // 4. 测试任务3：所有路径查询
+            System.out.println("\n===== 任务3: 所有路径查询 =====");
+            String startStation = "汉口火车站";
+            String endStation = "武昌火车站";
+            System.out.println("查询路径: " + startStation + " → " + endStation);
+            
+            List<List<String>> allPaths = system.findAllPaths(startStation, endStation);
+            System.out.println("找到路径数量: " + allPaths.size());
+            if (!allPaths.isEmpty()) {
+                System.out.println("第一条路径: " + allPaths.get(0));
+            }
+            
+            // 5. 测试任务4：最短路径查询
+            System.out.println("\n===== 任务4: 最短路径查询 =====");
+            List<String> shortestPath = system.findShortestPath(startStation, endStation);
+            System.out.println("最短路径: " + shortestPath);
+            
+            // 6. 测试任务5：格式化输出路径 - 确保调用此功能
+            System.out.println("\n===== 任务5: 路径格式化输出 =====");
+            system.printFormattedPath(shortestPath);
+            
+            // 7. 测试任务6和7：票价计算
+            System.out.println("\n===== 任务6 & 7: 票价计算 =====");
+            double normalFare = system.calculateFare(shortestPath, "normal");
+            double wuhanpassFare = system.calculateFare(shortestPath, "wuhanpass");
+            double daypassFare = system.calculateFare(shortestPath, "daypass");
+            
+            System.out.printf("普通票: %.2f元%n", normalFare);
+            System.out.printf("武汉通: %.2f元%n", wuhanpassFare);
+            System.out.printf("日票: %.2f元%n", daypassFare);
+            
+        } catch (Exception e) {
+            System.err.println("发生错误: " + e.getMessage());
+            e.printStackTrace();
         }
-        System.out.println("终点");
-
-        // 计算总距离
-        double totalDistance = 0;
-        for (int i = 0; i < path.size() - 1; i++) {
-            totalDistance += map.getGraph().get(path.get(i)).get(path.get(i + 1));
-        }
-
-        // 输出不同票种票价
-        System.out.println("\n总距离：" + totalDistance + " KM");
-        System.out.println("普通票价：" + FareCalculator.calculateFare(totalDistance, "normal") + " 元");
-        System.out.println("武汉通票价：" + FareCalculator.calculateFare(totalDistance, "wuhanpass") + " 元");
-        System.out.println("日票票价：" + FareCalculator.calculateFare(totalDistance, "daypass") + " 元");
     }
 }
